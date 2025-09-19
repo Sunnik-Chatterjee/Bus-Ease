@@ -9,33 +9,35 @@ const FRIEND_SERVICE = "https://bus-easeassistant.onrender.com";
 
 // Debug middleware
 app.use((req, res, next) => {
-  console.log("Incoming request:", req.method, req.originalUrl);
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
   next();
 });
 
-// IMPORTANT: More specific routes first - /api/v1 must come before /api
+// CRITICAL FIX: Use wildcard pattern '/api/v1/*' instead of just '/api/v1'
 app.use(
-  "/api/v1",
+  "/api/v1/*",
   createProxyMiddleware({
     target: FRIEND_SERVICE,
     changeOrigin: true,
-    // DO NOT remove /api/v1 - the backend expects it
-    onProxyReq: (proxyReq, req, res) => {
-      console.log("Forwarding to FRIEND_SERVICE:", FRIEND_SERVICE + req.originalUrl);
-    },
+    logLevel: 'debug', // This will show proxy activity
+    onError: (err, req, res) => {
+      console.error("❌ FRIEND_SERVICE Proxy Error:", err.message);
+      res.status(504).json({ error: "Gateway Timeout", service: "friend" });
+    }
   })
 );
 
-// Less specific route - handles /api/buses/* endpoints  
+// CRITICAL FIX: Use wildcard pattern '/api/*' instead of just '/api'
 app.use(
-  "/api",
+  "/api/*",
   createProxyMiddleware({
     target: MY_SERVICE,
     changeOrigin: true,
-    // DO NOT remove /api - the backend expects it
-    onProxyReq: (proxyReq, req, res) => {
-      console.log("Forwarding to MY_SERVICE:", MY_SERVICE + req.originalUrl);
-    },
+    logLevel: 'debug', // This will show proxy activity
+    onError: (err, req, res) => {
+      console.error("❌ MY_SERVICE Proxy Error:", err.message);
+      res.status(504).json({ error: "Gateway Timeout", service: "my" });
+    }
   })
 );
 
@@ -44,7 +46,7 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Proxy running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Proxy running on port ${PORT}`);
 });
 
