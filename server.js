@@ -7,37 +7,29 @@ const app = express();
 const MY_SERVICE = "https://bus-easebackend.onrender.com";
 const FRIEND_SERVICE = "https://bus-easeassistant.onrender.com";
 
+// Add type: "module" warning fix
 // Debug middleware
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
   next();
 });
 
-// CRITICAL FIX: Use wildcard pattern '/api/v1/*' instead of just '/api/v1'
+// V3.0 syntax: Use pathFilter instead of Express route patterns
 app.use(
-  "/api/v1/*",
   createProxyMiddleware({
+    pathFilter: '/api/v1/**', // V3.0 wildcard syntax
     target: FRIEND_SERVICE,
     changeOrigin: true,
-    logLevel: 'debug', // This will show proxy activity
-    onError: (err, req, res) => {
-      console.error("❌ FRIEND_SERVICE Proxy Error:", err.message);
-      res.status(504).json({ error: "Gateway Timeout", service: "friend" });
-    }
+    logLevel: 'debug',
   })
 );
 
-// CRITICAL FIX: Use wildcard pattern '/api/*' instead of just '/api'
 app.use(
-  "/api/*",
   createProxyMiddleware({
-    target: MY_SERVICE,
+    pathFilter: '/api/**', // V3.0 wildcard syntax
+    target: MY_SERVICE, 
     changeOrigin: true,
-    logLevel: 'debug', // This will show proxy activity
-    onError: (err, req, res) => {
-      console.error("❌ MY_SERVICE Proxy Error:", err.message);
-      res.status(504).json({ error: "Gateway Timeout", service: "my" });
-    }
+    logLevel: 'debug',
   })
 );
 
