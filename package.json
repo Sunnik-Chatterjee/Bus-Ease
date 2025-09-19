@@ -1,0 +1,17 @@
+{
+  "name": "proxy-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",       // <-- make sure this matches your main file
+  "scripts": {
+    "start": "node server.js"  // <-- this tells Render how to start your app
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0",
+    "http-proxy-middleware": "^3.0.5"
+  }
+}
+
