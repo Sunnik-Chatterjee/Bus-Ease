@@ -10,14 +10,11 @@ const MY_SERVICE = "https://bus-easebackend.onrender.com";
 // Friend's backend
 const FRIEND_SERVICE = "https://bus-easeassistant.onrender.com";
 
-// Proxy to friend's backend (put this FIRST so it doesn’t get caught by /api)
-app.use(
-  "/api/v1",
-  createProxyMiddleware({
-    target: FRIEND_SERVICE,
-    changeOrigin: true,
-  })
-);
+// Debug middleware (to see what's happening in Render logs)
+app.use((req, res, next) => {
+  console.log("Incoming request:", req.method, req.originalUrl);
+  next();
+});
 
 // Proxy to your backend
 app.use(
@@ -28,13 +25,22 @@ app.use(
   })
 );
 
-// Root test
+// Proxy to friend's backend
+app.use(
+  "/api/v1",
+  createProxyMiddleware({
+    target: FRIEND_SERVICE,
+    changeOrigin: true,
+  })
+);
+
+// Root route just for testing
 app.get("/", (req, res) => {
   res.send("Reverse proxy is running!");
 });
 
-// Start server
-const PORT = process.env.PORT || 10000;
+// Use Render’s port
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Proxy running on port ${PORT}`);
 });
