@@ -22,6 +22,10 @@ app.use(
   createProxyMiddleware({
     target: MY_SERVICE,
     changeOrigin: true,
+    pathRewrite: (path, req) => {
+      console.log("Forwarding to:", MY_SERVICE + path);
+      return path; // keep the path unchanged
+    },
   })
 );
 
