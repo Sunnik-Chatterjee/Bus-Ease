@@ -4,46 +4,45 @@ import { createProxyMiddleware } from "http-proxy-middleware";
 
 const app = express();
 
-// Your backend
 const MY_SERVICE = "https://bus-easebackend.onrender.com";
-
-// Friend's backend
 const FRIEND_SERVICE = "https://bus-easeassistant.onrender.com";
 
-// Debug middleware (to see what's happening in Render logs)
+// Debug middleware
 app.use((req, res, next) => {
   console.log("Incoming request:", req.method, req.originalUrl);
   next();
 });
 
-// Proxy to your backend
-app.use(
-  "/api",
-  createProxyMiddleware({
-    target: MY_SERVICE,
-    changeOrigin: true,
-    pathRewrite: (path, req) => {
-      console.log("Forwarding to:", MY_SERVICE + path);
-      return path; // keep the path unchanged
-    },
-  })
-);
-
-// Proxy to friend's backend
+// IMPORTANT: More specific routes first - /api/v1 must come before /api
 app.use(
   "/api/v1",
   createProxyMiddleware({
     target: FRIEND_SERVICE,
     changeOrigin: true,
+    // DO NOT remove /api/v1 - the backend expects it
+    onProxyReq: (proxyReq, req, res) => {
+      console.log("Forwarding to FRIEND_SERVICE:", FRIEND_SERVICE + req.originalUrl);
+    },
   })
 );
 
-// Root route just for testing
+// Less specific route - handles /api/buses/* endpoints  
+app.use(
+  "/api",
+  createProxyMiddleware({
+    target: MY_SERVICE,
+    changeOrigin: true,
+    // DO NOT remove /api - the backend expects it
+    onProxyReq: (proxyReq, req, res) => {
+      console.log("Forwarding to MY_SERVICE:", MY_SERVICE + req.originalUrl);
+    },
+  })
+);
+
 app.get("/", (req, res) => {
   res.send("Reverse proxy is running!");
 });
 
-// Use Render’s port
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Proxy running on port ${PORT}`);
